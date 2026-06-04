@@ -115,3 +115,10 @@ Docker 镜像与桌面发布包保持一致：`docker/Dockerfile` 会在构建�
 - 关闭功能：设置页关闭 AlphaSift，或配置 `ALPHASIFT_ENABLED=false`。
 - 禁止启用：保持 `ALPHASIFT_ENABLED=false`；源码部署如需更换来源，先在后端 Python 环境完成安装。
 - 回滚代码：移除 AlphaSift API 注册、Web 选股入口和相关配置项即可恢复到集成前流程；默认关闭状态下不会影响原有股票分析、报告生成和通知流程。
+
+## 每日选股 + 通知（GitHub Actions 调度）
+
+如果希望在 Web 选股页之外，把 AlphaSift 做成「每天工作日定时跑 + 推送到现有所有通知渠道」，参考独立文档：
+
+- [docs/alphasift-daily-briefing.md](./alphasift-daily-briefing.md)
+- 对应实现：`scripts/run_alphasift_briefing.py`、`.github/workflows/01-daily-alphasift-briefing.yml`

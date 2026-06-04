@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+- [新功能] 新增 AlphaSift 每日选股 + 通知封装：`scripts/run_alphasift_briefing.py` 调 `alphasift.dsa_adapter.screen` 生成 Markdown 报告，复用 `NotificationService` 推送到所有已配置的通知渠道，并落盘到 `reports/` 目录。
+- [新功能] 新增 GitHub Actions 工作流 `.github/workflows/01-daily-alphasift-briefing.yml`：工作日北京时间 18:00 自动跑一次 AlphaSift 选股推送，`workflow_dispatch` 支持覆盖策略 / 市场 / 候选数 / dry-run / force-run。
+- [文档] 新增 `docs/alphasift-daily-briefing.md`，说明 AlphaSift 每日选股推送的部署、所需 Variables/Secrets、手动触发与回滚步骤；并在 `docs/alphasift-integration.md` 末尾增加跳转链接。
+- [测试] 新增 `tests/test_alphasift_briefing.py`：覆盖单策略 / 多策略合并 / 空结果 / 适配层异常 / dry-run / no-notify / 通知失败等路径。
 - [改进] AlphaSift 选股入口在 Web 侧边栏中移动到“问股”下方，贴近 Agent/研究辅助工作流。
 - [改进] Docker 镜像构建阶段预置默认 AlphaSift 适配层，与桌面发布包一样避免运行期额外安装。
 - [新功能] 新增默认关闭的 AlphaSift 选股页签，通过 `ALPHASIFT_ENABLED` 开启后经由稳定适配层读取策略并执行选股。
