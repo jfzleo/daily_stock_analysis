@@ -176,6 +176,10 @@ jobs:
           # ==========================================
           # 数据源（部分 AlphaSift 策略可能依赖 Tushare/Longbridge 行情）
           # ==========================================
+          # 实时行情源优先级：GitHub Actions 运行在海外，efinance/akshare_em（东财）
+          # 容易被限流或连接失败；优先使用 tencent/akshare_sina 可减少 fallback 噪音
+          REALTIME_SOURCE_PRIORITY: ${{ vars.REALTIME_SOURCE_PRIORITY || 'tencent,akshare_sina,efinance,akshare_em' }}
+          ENABLE_EASTMONEY_PATCH: ${{ vars.ENABLE_EASTMONEY_PATCH || 'true' }}
           TUSHARE_TOKEN: ${{ secrets.TUSHARE_TOKEN }}
           LONGBRIDGE_OAUTH_CLIENT_ID: ${{ vars.LONGBRIDGE_OAUTH_CLIENT_ID || secrets.LONGBRIDGE_OAUTH_CLIENT_ID }}
           LONGBRIDGE_OAUTH_TOKEN_CACHE_B64: ${{ secrets.LONGBRIDGE_OAUTH_TOKEN_CACHE_B64 }}

@@ -104,6 +104,54 @@ class BuildBriefingTests(unittest.TestCase):
         self.assertIn("贵州茅台", briefing["markdown"])
         self.assertIn("宁德时代", briefing["markdown"])
 
+    def test_source_fallback_noise_suppressed_when_candidates_exist(self) -> None:
+        """有候选结果时，数据源 fallback 降级信息不应出现在报告中。"""
+        adapter = _adapter({
+            "dual_low": {
+                "candidates": [{"code": "600519", "name": "贵州茅台"}],
+                "source_errors": [
+                    "efinance: Expecting value: line 1 column 1 (char 0)",
+                    "akshare_em: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+                ],
+                "warnings": [
+                    "Snapshot source fallback: efinance: Expecting value: line 1 column 1 (char 0)",
+                    "Snapshot source fallback: akshare_em: ('Connection aborted.', RemoteDisconnected(...))",
+                ],
+            }
+        })
+
+        with patch.object(run_alphasift_briefing, "_import_adapter", return_value=adapter):
+            briefing = run_alphasift_briefing.build_briefing(["dual_low"], "cn", 5)
+
+        markdown = briefing["markdown"]
+        self.assertEqual(briefing["candidate_total"], 1)
+        self.assertIn("贵州茅台", markdown)
+        # fallback 噪音不应出现在报告中
+        self.assertNotIn("数据源异常", markdown)
+        self.assertNotIn("Expecting value", markdown)
+        self.assertNotIn("Connection aborted", markdown)
+        self.assertNotIn("source fallback", markdown)
+
+    def test_source_errors_shown_when_no_candidates(self) -> None:
+        """无候选结果时，source_errors 和 warnings 应当正常展示以帮助排查。"""
+        adapter = _adapter({
+            "dual_low": {
+                "candidates": [],
+                "source_errors": [
+                    "efinance: Expecting value: line 1 column 1 (char 0)",
+                ],
+                "warnings": ["数据为空"],
+            }
+        })
+
+        with patch.object(run_alphasift_briefing, "_import_adapter", return_value=adapter):
+            briefing = run_alphasift_briefing.build_briefing(["dual_low"], "cn", 5)
+
+        markdown = briefing["markdown"]
+        self.assertEqual(briefing["candidate_total"], 0)
+        # 无候选时警告应保留
+        self.assertIn("数据为空", markdown)
+
     def test_empty_result_shows_placeholder(self) -> None:
         adapter = _adapter({
             "dual_low": {"candidates": [], "warnings": ["数据为空"]},

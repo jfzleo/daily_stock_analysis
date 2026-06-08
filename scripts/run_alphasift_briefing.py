@@ -226,6 +226,31 @@ def _format_number(value: Any, suffix: str = "") -> str:
     return f"{number:.2f}{suffix}"
 
 
+_SOURCE_FALLBACK_KEYWORDS = (
+    "source fallback",
+    "Expecting value",
+    "RemoteDisconnected",
+    "Connection aborted",
+    "Remote end closed connection",
+    "connection broken",
+    "efinance:",
+    "akshare_em:",
+    "ConnectionError",
+    "JSONDecodeError",
+)
+
+
+def _is_source_fallback_noise(message: Any) -> bool:
+    """判断 source_errors / warnings 是否属于数据源 fallback 的正常降级信息。
+
+    在 GitHub Actions 等海外 CI 环境中，efinance / akshare_em 等东财数据源
+    经常因 IP 限制而失败，但 AlphaSift 内部会自动降级到其他数据源。
+    当最终仍产出了候选股时，这些降级信息只是噪音，不需要在报告中展示。
+    """
+    text = str(message).lower()
+    return any(keyword.lower() in text for keyword in _SOURCE_FALLBACK_KEYWORDS)
+
+
 def _format_block(strategy: str, data: Dict[str, Any], candidates: List[Dict[str, Any]]) -> str:
     lines: List[str] = [f"## 🎯 策略：{strategy}", ""]
 
@@ -293,10 +318,23 @@ def _format_block(strategy: str, data: Dict[str, Any], candidates: List[Dict[str
         lines.append("")
 
     source_errors = data.get("source_errors") or []
+    warnings_ = data.get("warnings") or []
+
+    if candidates:
+        # 有候选结果时，数据源 fallback 只是正常降级，不必在报告里大篇幅展示。
+        # 只保留与 fallback 无关的真正异常 / 警告。
+        source_errors = [
+            e for e in source_errors
+            if not _is_source_fallback_noise(e)
+        ]
+        warnings_ = [
+            w for w in warnings_
+            if not _is_source_fallback_noise(w)
+        ]
+
     if source_errors:
         lines.append("⚠️ 数据源异常：" + "；".join(str(item) for item in source_errors))
         lines.append("")
-    warnings_ = data.get("warnings") or []
     if warnings_:
         lines.append("⚠️ 警告：" + "；".join(str(item) for item in warnings_))
         lines.append("")
