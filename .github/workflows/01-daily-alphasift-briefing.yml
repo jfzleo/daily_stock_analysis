@@ -1,9 +1,9 @@
 name: AlphaSift 每日选股推送
 
 on:
-  # 工作日北京时间 18:00（UTC 10:00）跑一次
+  # 工作日 UTC 09:30 触发，预留 GitHub Actions 排队延迟，实际约北京时间 18:30-20:00 运行
   schedule:
-    - cron: '0 10 * * 1-5'
+    - cron: '30 9 * * 1-5'     # 周一到周五，UTC 09:30 = 北京时间 17:30（与每日分析错开 30 分钟）
 
   workflow_dispatch:
     inputs:
